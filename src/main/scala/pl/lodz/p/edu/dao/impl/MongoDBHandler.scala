@@ -1,6 +1,6 @@
 package pl.lodz.p.edu.dao.impl
 
-import org.mongodb.scala.bson.{BsonDouble, BsonObjectId, BsonString, BsonValue}
+import org.mongodb.scala.bson.{BsonDouble, BsonInt32, BsonObjectId, BsonString, BsonValue}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.FindOneAndReplaceOptions
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
@@ -31,6 +31,7 @@ class MongoDBHandler(dbName: String, collectionName: String)
       case Some(bson: BsonString) => bson.getValue
       case Some(bson: BsonDouble) => bson.getValue
       case Some(bson: BsonObjectId) => bson.getValue
+      case Some(bson: BsonInt32) => bson.getValue
       case _ => logger.error(Property("getBsonValueError"))
     }
   }
@@ -42,11 +43,11 @@ class MongoDBHandler(dbName: String, collectionName: String)
     collection.find()
 
   override def update(doc: Document): Observable[UpdateResult] =
-    collection.replaceOne(equal("id", getBsonValue(doc.get("id"))), doc)
+    collection.replaceOne(and(equal("id", getBsonValue(doc.get("id"))),lt("version",getBsonValue(doc.get("version")))), doc)
 
   override def synchronize(docs: Seq[Document]): String = {
     for (doc <- docs) {
-      val resp = collection.findOneAndReplace(equal("id", getBsonValue(doc.get("id"))), doc, FindOneAndReplaceOptions().upsert(true)).toFuture
+      val resp = collection.findOneAndReplace(and(equal("id", getBsonValue(doc.get("id"))),lt("version",getBsonValue(doc.get("version")))), doc, FindOneAndReplaceOptions().upsert(true)).toFuture
     }
     "Synchronization completed."
   }

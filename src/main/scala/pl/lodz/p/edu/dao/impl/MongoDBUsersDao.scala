@@ -7,22 +7,12 @@ import pl.lodz.p.edu.model.User
 
 class MongoDBUsersDao(dbHandler: GenDBHandler) extends UsersDao {
   override def synchronize(users: Seq[User]): String = {
-    val usersDocs = users map { user =>
-      Document(
-        "id" -> user.id,
-        "login" -> user.login,
-        "passwordHash" -> user.passwordHash,
-        "firstName" -> user.firstName,
-        "lastName" -> user.lastName,
-        "accessLevel" -> user.accessLevel,
-        "isActive" -> user.isActive
-      )
-    }
+    val usersDocs = users map (user => createDocument(user))
     dbHandler.synchronize(usersDocs)
   }
 
   override def update(user: User): Boolean =
-    dbHandler.subscribeToResult[UpdateResult](createDocument(user), dbHandler.update).get.wasAcknowledged
+    dbHandler.subscribeToResult[UpdateResult](createDocument(user), dbHandler.update).get.getModifiedCount == 1
 
   private def createDocument(user: User): Document = {
     Document(
@@ -32,7 +22,8 @@ class MongoDBUsersDao(dbHandler: GenDBHandler) extends UsersDao {
       "firstName" -> user.firstName,
       "lastName" -> user.lastName,
       "accessLevel" -> user.accessLevel,
-      "isActive" -> user.isActive
+      "isActive" -> user.isActive,
+      "version" -> user.version
     )
   }
 

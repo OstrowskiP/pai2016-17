@@ -37,7 +37,7 @@ trait RoutesWindows extends Directives with JsonSupport {
             val resp: Window = windowsRepository.findByName(window)
 
             if (resp.amount > 0) {
-              windowsRepository.update(resp.copy(amount = resp.amount - 1))
+              windowsRepository.update(resp.copy(amount = resp.amount - 1, version = resp.version + 1))
               logger.info("Bought window: " + window)
               complete("{\"available\":\"true\"}")
             } else {

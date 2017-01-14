@@ -19,7 +19,8 @@ class MongoDBWindowsDao(dbHandler: GenDBHandler) extends WindowsDao {
       "name" -> window.name,
       "size" -> window.size,
       "color" -> window.color,
-      "amount" -> window.amount
+      "amount" -> window.amount,
+      "version" -> window.version
     )
   }
 
@@ -38,7 +39,8 @@ class MongoDBWindowsDao(dbHandler: GenDBHandler) extends WindowsDao {
       size <- doc.get[BsonString]("size")
       color <- doc.get[BsonString]("color")
       amount <- doc.get[BsonInt32]("amount")
-    } yield Window(id.getValue, name.getValue, size.getValue, color.getValue, amount.getValue)).get
+      version <- doc.get[BsonInt32]("version")
+    } yield Window(id.getValue, name.getValue, size.getValue, color.getValue, amount.getValue, version.getValue)).get
   }
 
   override def update(window: Window): Boolean =

@@ -7,8 +7,8 @@ import pl.lodz.p.edu.model.{User, Window}
 import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  val userFormat = jsonFormat7(User)
-  val windowFormat = jsonFormat5(Window)
+  val userFormat = jsonFormat8(User)
+  val windowFormat = jsonFormat6(Window)
 
   def toJson[T <: AnyRef](cl: T): String = write(cl)(DefaultFormats)
 }
