@@ -11,7 +11,7 @@ import org.apache.http.impl.client.DefaultHttpClient
 class SimpleHttpClient(host: String, port: Int) {
 
   def post(json: String, path: String): String = {
-    val post = new HttpPost(s"https://$host:$port/$path")
+    val post = new HttpPost(s"http://$host:$port/$path")
     post.setHeader("Content-type", "application/json")
     post.setEntity(new StringEntity(json))
     val response = (new DefaultHttpClient).execute(post)

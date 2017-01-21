@@ -14,6 +14,7 @@ class MongoDBUsersDao(dbHandler: GenDBHandler) extends UsersDao {
   override def update(user: User): Boolean =
     dbHandler.subscribeToResult[UpdateResult](createDocument(user), dbHandler.update).get.getModifiedCount == 1
 
+
   private def createDocument(user: User): Document = {
     Document(
       "id" -> user.id,
@@ -22,7 +23,7 @@ class MongoDBUsersDao(dbHandler: GenDBHandler) extends UsersDao {
       "firstName" -> user.firstName,
       "lastName" -> user.lastName,
       "accessLevel" -> user.accessLevel,
-      "isActive" -> user.isActive,
+      "active" -> user.active,
       "version" -> user.version
     )
   }

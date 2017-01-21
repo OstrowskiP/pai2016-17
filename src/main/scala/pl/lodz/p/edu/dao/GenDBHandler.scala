@@ -14,6 +14,8 @@ trait GenDBHandler {
 
   def delete(doc: Document): Observable[DeleteResult]
 
+  def findById(id: Int): Observable[Document]
+
   def find(doc: Document): Observable[Document]
 
   def findAll(): Observable[Document]
@@ -24,9 +26,9 @@ trait GenDBHandler {
 
   def create(doc: Document): Observable[Completed]
 
+  def subscribeToResult(id: Int, finder: Int => Observable[Document]): Option[Document]
+
   def subscribeToResult[A](doc: Document, finder: Document => Observable[A]): Option[A]
 
   def subscribeToResults[A](docs: Seq[Document], finder: Seq[Document] => Observable[A]): Option[A]
-
-  def extractDoc[A](maybeDoc: Try[Seq[A]]): Option[A]
 }

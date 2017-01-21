@@ -1,6 +1,6 @@
 package pl.lodz.p.edu.service
 
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
+import akka.http.scaladsl.model.{ContentType, HttpEntity, HttpResponse, MediaTypes}
 import akka.http.scaladsl.server.{Directives, Route}
 import org.slf4j.{Logger, LoggerFactory}
 import pl.lodz.p.edu.dao.WindowsDao
@@ -33,18 +33,33 @@ trait RoutesWindows extends Directives with JsonSupport {
         }
       } ~ path("buy" ~ Slash.?) {
         post {
-          entity(as[Window]) { window =>
-            val resp: Window = windowsRepository.findByName(window)
-
+          entity(as[String]) { windowIdJson: String =>
+            val windowId: Int = windowIdJson.split(':').apply(1).replace("\"", "").replace("}]", "").trim.toInt
+            //            val windowId: Int = Integer.parseInt(windowIdJson.obj.get("id").get.toString)
+            val resp: Window = windowsRepository.findById(windowId)
             if (resp.amount > 0) {
               windowsRepository.update(resp.copy(amount = resp.amount - 1, version = resp.version + 1))
-              logger.info("Bought window: " + window)
-              complete("{\"available\":\"true\"}")
+              logger.info("Bought window: " + resp)
+              complete("{\"available\":true}")
             } else {
               logger.info("Failed to buy window, insufficient amount.")
-              complete("{\"available\":\"false\"}")
+              //              complete(HttpEntity(encoding,"{\"available\":false}"))
+              //              val json =
+              complete(HttpEntity(ContentType(MediaTypes.`application/json`), "{\"available\":false}"))
             }
           }
+          //          entity(as[Window]) { window =>
+          //            val resp: Window = windowsRepository.findByName(window)
+          //
+          //            if (resp.amount > 0) {
+          //              windowsRepository.update(resp.copy(amount = resp.amount - 1, version = resp.version + 1))
+          //              logger.info("Bought window: " + window)
+          //              complete("{\"available\":\"true\"}")
+          //            } else {
+          //              logger.info("Failed to buy window, insufficient amount.")
+          //              complete("{\"available\":\"false\"}")
+          //            }
+          //          }
         }
       }
     }

@@ -1,3 +1,3 @@
 package pl.lodz.p.edu.model
 
-case class Window(id: String, name: String, size: String, color: String, amount: Int, version: Int)
+case class Window(id: Int, name: String, size: String, color: String, amount: Int, version: Int)

@@ -16,6 +16,7 @@ import scala.util.{Failure, Success, Try}
 class MongoDBHandler(dbName: String, collectionName: String)
   extends GenDBHandler {
 
+  import MongoDBHandler._
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   val client: MongoClient = MongoClient()
@@ -25,6 +26,18 @@ class MongoDBHandler(dbName: String, collectionName: String)
 
   override def delete(doc: Document): Observable[DeleteResult] =
     collection.deleteOne(equal("id", getBsonValue(doc.get("id"))))
+
+  override def findById(id: Int): Observable[Document] =
+    collection.find(equal("id", id))
+
+  override def find(doc: Document): Observable[Document] =
+    collection.find(equal("id", getBsonValue(doc.get("id"))))
+
+  override def findAll(): Observable[Document] =
+    collection.find()
+
+  override def update(doc: Document): Observable[UpdateResult] =
+    collection.replaceOne(and(equal("id", getBsonValue(doc.get("id"))), lt("version", getBsonValue(doc.get("version")))), doc)
 
   def getBsonValue(optBson: Option[BsonValue]) = {
     optBson match {
@@ -36,18 +49,9 @@ class MongoDBHandler(dbName: String, collectionName: String)
     }
   }
 
-  override def find(doc: Document): Observable[Document] =
-    collection.find(equal("id", getBsonValue(doc.get("id"))))
-
-  override def findAll(): Observable[Document] =
-    collection.find()
-
-  override def update(doc: Document): Observable[UpdateResult] =
-    collection.replaceOne(and(equal("id", getBsonValue(doc.get("id"))),lt("version",getBsonValue(doc.get("version")))), doc)
-
   override def synchronize(docs: Seq[Document]): String = {
     for (doc <- docs) {
-      val resp = collection.findOneAndReplace(and(equal("id", getBsonValue(doc.get("id"))),lt("version",getBsonValue(doc.get("version")))), doc, FindOneAndReplaceOptions().upsert(true)).toFuture
+      val resp = collection.findOneAndReplace(and(equal("id", getBsonValue(doc.get("id"))), lt("version", getBsonValue(doc.get("version")))), doc, FindOneAndReplaceOptions().upsert(true)).toFuture
     }
     "Synchronization completed."
   }
@@ -67,6 +71,18 @@ class MongoDBHandler(dbName: String, collectionName: String)
     }
   }
 
+  override def subscribeToResult(id: Int, finder: Int => Observable[Document]): Option[Document] = {
+    val fut: Future[Seq[Document]] = finder(id).toFuture()
+    Await.ready(fut, Duration(1000, MILLISECONDS))
+
+    fut.value match {
+      case Some(fromDB) => extractDoc[Document](fromDB)
+      case _ =>
+        logger.error(Property("documentNotFound") + id)
+        None
+    }
+  }
+
   override def subscribeToResults[A](docs: Seq[Document], finder: Seq[Document] => Observable[A]): Option[A] = {
     val fut: Future[Seq[A]] = finder(docs).toFuture()
     Await.ready(fut, Duration(1000, MILLISECONDS))
@@ -78,21 +94,36 @@ class MongoDBHandler(dbName: String, collectionName: String)
         None
     }
   }
+}
 
-  override def extractDoc[A](maybeDoc: Try[Seq[A]]): Option[A] = {
+object MongoDBHandler {
+  def extractDoc[A](maybeDoc: Try[Seq[A]]): Option[A] = {
     maybeDoc match {
       case Success(docList) => {
         if (docList.isEmpty) {
-          logger.info(Property("documentRetrievedButEmpty"))
           None
         } else {
           val result = docList.head
-          logger.info(Property("documentRetrieved") + result)
           Some(result)
         }
       }
       case Failure(ex) => {
-        logger.error(Property(ex.getMessage))
+        None
+      }
+    }
+  }
+
+  def extractDocs[A](maybeDoc: Try[Seq[A]]): Option[Seq[A]] = {
+    maybeDoc match {
+      case Success(docList) => {
+        if (docList.isEmpty) {
+          None
+        } else {
+          val result = docList
+          Some(result)
+        }
+      }
+      case Failure(ex) => {
         None
       }
     }

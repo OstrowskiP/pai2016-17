@@ -8,7 +8,8 @@ trait WindowsDao {
   def findByName(window: Window): Window
 
   def update(window: Window): Boolean
-}
 
+  def findById(windowId: Int): Window
+}
 
 
