@@ -15,6 +15,12 @@ class MongoDBUsersDao(dbHandler: GenDBHandler) extends UsersDao {
     dbHandler.subscribeToResult[UpdateResult](createDocument(user), dbHandler.update).get.getModifiedCount == 1
 
 
+  override def delete(user: User): Boolean =
+    dbHandler.subscribeToResult[DeleteResult](createDocument(user), dbHandler.delete).get.getDeletedCount == 1
+
+  override def findAll(): Observable[Document] =
+    dbHandler.findAll
+
   private def createDocument(user: User): Document = {
     Document(
       "id" -> user.id,
@@ -27,10 +33,4 @@ class MongoDBUsersDao(dbHandler: GenDBHandler) extends UsersDao {
       "version" -> user.version
     )
   }
-
-  override def delete(user: User): Boolean =
-    dbHandler.subscribeToResult[DeleteResult](createDocument(user), dbHandler.delete).get.getDeletedCount == 1
-
-  override def findAll(): Observable[Document] =
-    dbHandler.findAll
 }

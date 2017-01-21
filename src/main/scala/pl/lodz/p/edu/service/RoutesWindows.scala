@@ -34,17 +34,13 @@ trait RoutesWindows extends Directives with JsonSupport {
       } ~ path("buy" ~ Slash.?) {
         post {
           entity(as[String]) { windowIdJson: String =>
-            val windowId: Int = windowIdJson.split(':').apply(1).replace("\"", "").replace("}]", "").trim.toInt
-            //            val windowId: Int = Integer.parseInt(windowIdJson.obj.get("id").get.toString)
-            val resp: Window = windowsRepository.findById(windowId)
+            val resp: Window = windowsRepository.findById(getIntFromJson(windowIdJson))
             if (resp.amount > 0) {
               windowsRepository.update(resp.copy(amount = resp.amount - 1, version = resp.version + 1))
               logger.info("Bought window: " + resp)
               complete("{\"available\":true}")
             } else {
               logger.info("Failed to buy window, insufficient amount.")
-              //              complete(HttpEntity(encoding,"{\"available\":false}"))
-              //              val json =
               complete(HttpEntity(ContentType(MediaTypes.`application/json`), "{\"available\":false}"))
             }
           }
@@ -66,4 +62,6 @@ trait RoutesWindows extends Directives with JsonSupport {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val encoding = MediaTypes.`application/json`
 
+  private def getIntFromJson(json: String): Int =
+    json.split(':').apply(1).replace("\"", "").replace("}]", "").trim.toInt
 }

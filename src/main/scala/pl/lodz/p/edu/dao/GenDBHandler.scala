@@ -3,8 +3,6 @@ package pl.lodz.p.edu.dao
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.mongodb.scala.{Completed, Document, MongoClient, MongoCollection, MongoDatabase, Observable}
 
-import scala.util.Try
-
 trait GenDBHandler {
   def client: MongoClient
 

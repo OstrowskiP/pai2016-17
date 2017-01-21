@@ -51,7 +51,7 @@ class MongoDBHandler(dbName: String, collectionName: String)
 
   override def synchronize(docs: Seq[Document]): String = {
     for (doc <- docs) {
-      val resp = collection.findOneAndReplace(and(equal("id", getBsonValue(doc.get("id"))), lt("version", getBsonValue(doc.get("version")))), doc, FindOneAndReplaceOptions().upsert(true)).toFuture
+      collection.findOneAndReplace(and(equal("id", getBsonValue(doc.get("id"))), lt("version", getBsonValue(doc.get("version")))), doc, FindOneAndReplaceOptions().upsert(true)).toFuture
     }
     "Synchronization completed."
   }
@@ -99,33 +99,29 @@ class MongoDBHandler(dbName: String, collectionName: String)
 object MongoDBHandler {
   def extractDoc[A](maybeDoc: Try[Seq[A]]): Option[A] = {
     maybeDoc match {
-      case Success(docList) => {
+      case Success(docList) =>
         if (docList.isEmpty) {
           None
         } else {
           val result = docList.head
           Some(result)
         }
-      }
-      case Failure(ex) => {
+      case Failure(_) =>
         None
-      }
     }
   }
 
   def extractDocs[A](maybeDoc: Try[Seq[A]]): Option[Seq[A]] = {
     maybeDoc match {
-      case Success(docList) => {
+      case Success(docList) =>
         if (docList.isEmpty) {
           None
         } else {
           val result = docList
           Some(result)
         }
-      }
-      case Failure(ex) => {
+      case Failure(_) =>
         None
-      }
     }
   }
 }
