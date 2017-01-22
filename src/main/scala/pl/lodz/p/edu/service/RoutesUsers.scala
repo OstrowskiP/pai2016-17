@@ -79,6 +79,6 @@ trait RoutesUsers extends Directives with JsonSupport {
     )
   }
 
-  private def getJsonArrayString(docs: Seq[Document]): String =
+  def getJsonArrayString(docs: Seq[Document]): String =
     escapeJson(JSONArray(docs map (createDocumentToSend(_)) map (_.toJson) toList).toString).toString
 }

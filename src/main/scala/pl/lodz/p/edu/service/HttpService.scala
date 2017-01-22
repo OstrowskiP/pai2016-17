@@ -31,13 +31,9 @@ class HttpService extends Routes with RoutesWindows with DBConfig {
         logger.info("Invoking users synchronization with all external systems.")
         val users = usersRepository.findAll().toFuture
         Await.ready(users, Duration(2000, MILLISECONDS))
-        val docList = MongoDBHandler.extractDoc(users.value.get).toList
-        val jsonList = docList map { doc =>
-          doc.toJson
-        }
-        val jsonArrStr = JSONArray(jsonList).toString()
+        val docList = MongoDBHandler.extractDocs(users.value.get).get
         val client = new SimpleHttpClient(Property("externalServerHttpInterface"), Property.getInt("externalServerHttpPort"))
-        val responseStatus = client.post(jsonArrStr, "api/admin/synchronise-listener")
+        val responseStatus = client.post(getJsonArrayString(docList), "api/admin/synchronise-listener")
         logger.info(s"Synchronization result: $responseStatus")
       }
     }
